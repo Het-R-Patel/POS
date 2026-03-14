@@ -51,7 +51,7 @@ const CashierOrderCard = ({ order, onPaymentComplete }) => {
           {order.items.map(item => (
             <div key={item.id} className="flex justify-between">
               <span className="text-gray-700">
-                {item.quantity}x {item.menuItem.name}
+                {item.quantity}x {item.menuItemId.name}
               </span>
               <span className="font-medium text-gray-900">
                 ${item.subtotal.toFixed(2)}

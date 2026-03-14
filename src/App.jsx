@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { OrderProvider } from './context/OrderContext';
 import { NotificationProvider } from './context/NotificationContext';
 import Navigation from './components/Navigation';
 import LoginPage from './pages/LoginPage';
@@ -16,7 +15,6 @@ const App = () => {
   return (
     <Router>
       <NotificationProvider>
-        <OrderProvider>
         <Routes>
           {/* Login route without navigation */}
           <Route path="/login" element={<LoginPage />} />
@@ -52,7 +50,6 @@ const App = () => {
           {/* Redirect root to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
-      </OrderProvider>
       </NotificationProvider>
     </Router>
   );

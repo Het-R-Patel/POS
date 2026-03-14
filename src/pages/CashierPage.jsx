@@ -1,13 +1,50 @@
 import React, { useState } from 'react';
-import { useOrders } from '../context/OrderContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from '../context/NotificationContext';
 import CashierOrderCard from '../components/cashier/CashierOrderCard';
 import { CreditCard, DollarSign } from 'lucide-react';
+import { ClipLoader } from 'react-spinners';
+import { fetchOrders, updateOrderStatus, updatePaymentStatus } from '../api/ordersApi';
+import { selectAllOrders } from '../store/features/order/orderSelectors';
+import { 
+  setOrders,
+  upsertOrder,
+} from '../store/features/order/orderSlice';
 
 const CashierPage = () => {
-  const { orders, updateOrderStatus, updatePaymentStatus } = useOrders();
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  const orders = useSelector(selectAllOrders);
   const { addNotification } = useNotifications();
   const [filterStatus, setFilterStatus] = useState('unpaid');
+
+  const ordersQuery = useQuery({
+    queryKey: ['orders', 'cashier'],
+    queryFn: () => fetchOrders({ page: 1, limit: 100, sortBy: 'createdAt', order: 'desc' }),
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
+  });
+
+  React.useEffect(() => {
+    if (ordersQuery.data) {
+      dispatch(setOrders(ordersQuery.data));
+    }
+  }, [ordersQuery.data, dispatch]);
+
+  const updatePaymentStatusMutation = useMutation({
+    mutationFn: updatePaymentStatus,
+    onSuccess: (updatedOrder) => {
+      dispatch(upsertOrder(updatedOrder));
+    },
+  });
+
+  const updateOrderStatusMutation = useMutation({
+    mutationFn: updateOrderStatus,
+    onSuccess: (updatedOrder) => {
+      dispatch(upsertOrder(updatedOrder));
+    },
+  });
 
   const readyOrders = orders.filter(
     order => order.status === 'ready' || order.status === 'completed'
@@ -18,17 +55,34 @@ const CashierPage = () => {
     return order.paymentStatus === filterStatus;
   });
 
-  const handlePaymentComplete = (orderId, paymentMethod) => {
+  const handlePaymentComplete = async (orderId, paymentMethod) => {
     const order = orders.find(o => o.id === orderId);
-    updatePaymentStatus(orderId, 'paid', paymentMethod);
-    updateOrderStatus(orderId, 'completed');
+    try {
+      await updatePaymentStatusMutation.mutateAsync({
+        orderId,
+        paymentStatus: 'paid',
+        paymentMethod,
+      });
+
+      await updateOrderStatusMutation.mutateAsync({
+        orderId,
+        status: 'completed',
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
     
-    // Add success notification
-    addNotification({
-      type: 'success',
-      title: 'Payment Received',
-      message: `Payment of $${order?.totalAmount.toFixed(2)} received for Table ${order?.tableNumber} via ${paymentMethod}`,
-    });
+      addNotification({
+        type: 'success',
+        title: 'Payment Received',
+        message: `Payment of $${order?.totalAmount.toFixed(2)} received for Table ${order?.tableNumber} via ${paymentMethod}`,
+      });
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Payment Failed',
+        message: error?.message || 'Unable to complete payment',
+      });
+    }
   };
 
   const getTotalRevenue = () => {
@@ -88,7 +142,12 @@ const CashierPage = () => {
       </div>
 
       {/* Orders Grid */}
-      {filteredOrders.length === 0 ? (
+      {ordersQuery.isPending ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <ClipLoader size={42} color="#0EA5E9" loading={ordersQuery.isPending} />
+          <p className="text-gray-500">Loading orders...</p>
+        </div>
+      ) : filteredOrders.length === 0 ? (
         <div className="text-center py-16">
           <CreditCard className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <p className="text-xl text-gray-500">No orders to display</p>
