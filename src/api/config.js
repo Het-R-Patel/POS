@@ -2,6 +2,7 @@ import axios from 'axios';
 
 // Base API URL - change this to match your backend server
 const API_BASE_URL = 'api';
+const AUTH_STORAGE_KEY = 'pos_auth';
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
@@ -11,6 +12,28 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) {
+      return config;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      const accessToken = parsed?.accessToken;
+      if (accessToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
+    } catch {
+      return config;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 // // Request interceptor - add auth tokens, logging, etc.
 // axiosInstance.interceptors.request.use(

@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { NotificationProvider } from './context/NotificationContext';
 import Navigation from './components/Navigation';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import WaiterPage from './pages/WaiterPage';
 import KitchenPage from './pages/KitchenPage';
@@ -10,45 +12,101 @@ import AdminPage from './pages/AdminPage';
 import TableManagementPage from './pages/features/TableManagementPage';
 import InventoryManagementPage from './pages/features/InventoryManagementPage';
 import CustomerLoyaltyPage from './pages/features/CustomerLoyaltyPage';
+import { getRoleHomePath } from './store/features/auth/authSlice';
+
+const LoginOrRoleRedirect = () => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  if (isAuthenticated) {
+    return <Navigate to={getRoleHomePath(user?.role)} replace />;
+  }
+
+  return <LoginPage />;
+};
+
+const RootRedirect = () => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const targetPath = isAuthenticated ? getRoleHomePath(user?.role) : '/login';
+  return <Navigate to={targetPath} replace />;
+};
 
 const App = () => {
   return (
     <Router>
       <NotificationProvider>
         <Routes>
-          {/* Login route without navigation */}
-          <Route path="/login" element={<LoginPage />} />
-          
-          {/* Protected routes with navigation */}
-          <Route path="/waiter" element={
-            <div className="min-h-screen bg-gray-50">
-              <Navigation />
-              <WaiterPage />
-            </div>
-          } />
-          <Route path="/kitchen" element={
-            <div className="min-h-screen bg-gray-50">
-              <Navigation />
-              <KitchenPage />
-            </div>
-          } />
-          <Route path="/cashier" element={
-            <div className="min-h-screen bg-gray-50">
-              <Navigation />
-              <CashierPage />
-            </div>
-          } />
-          
-          {/* Admin route without navigation (has its own sidebar) */}
-          <Route path="/admin" element={<AdminPage />} />
-          
-          {/* Feature routes */}
-          <Route path="/tables" element={<TableManagementPage />} />
-          <Route path="/inventory" element={<InventoryManagementPage />} />
-          <Route path="/loyalty" element={<CustomerLoyaltyPage />} />
-          
-          {/* Redirect root to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginOrRoleRedirect />} />
+
+          <Route
+            path="/waiter"
+            element={
+              <ProtectedRoute allowedRoles={['waiter']}>
+                <div className="min-h-screen bg-gray-50">
+                  <Navigation />
+                  <WaiterPage />
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kitchen"
+            element={
+              <ProtectedRoute allowedRoles={['kitchen', 'kitech']}>
+                <div className="min-h-screen bg-gray-50">
+                  <Navigation />
+                  <KitchenPage />
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cashier"
+            element={
+              <ProtectedRoute allowedRoles={['cashier']}>
+                <div className="min-h-screen bg-gray-50">
+                  <Navigation />
+                  <CashierPage />
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/tables"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <TableManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <InventoryManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loyalty"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <CustomerLoyaltyPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </NotificationProvider>
     </Router>

@@ -1,40 +1,46 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ChefHat,
   Users,
   CreditCard,
   LogOut,
-  LayoutGrid,
-  Package,
-  Star,
 } from "lucide-react";
 import NotificationBell from "./notifications/NotificationBell";
 import { useNotifications } from "../context/NotificationContext";
+import { logoutUser, normalizeRole } from "../store/features/auth/authSlice";
 
 const Navigation = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const { notifications, removeNotification, markAsRead, clearAll } =
     useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
+  const currentRole = normalizeRole(user?.role);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    dispatch(logoutUser());
     navigate("/login");
   };
 
   // Core navigation items (always visible)
-  const coreNavItems = [
+  const roleNavItemsMap = {
+    waiter: [{ path: "/waiter", label: "Waiter", icon: Users }],
+    kitchen: [{ path: "/kitchen", label: "Kitchen", icon: ChefHat }],
+    cashier: [{ path: "/cashier", label: "Cashier", icon: CreditCard }],
+    admin: [
+      { path: "/waiter", label: "Waiter", icon: Users },
+      { path: "/kitchen", label: "Kitchen", icon: ChefHat },
+      { path: "/cashier", label: "Cashier", icon: CreditCard },
+    ],
+  };
+
+  const coreNavItems = roleNavItemsMap[currentRole] || [
     { path: "/waiter", label: "Waiter", icon: Users },
     { path: "/kitchen", label: "Kitchen", icon: ChefHat },
     { path: "/cashier", label: "Cashier", icon: CreditCard },
-  ];
-
-  // Additional items (hidden on tablets)
-  const additionalNavItems = [
-    { path: "/tables", label: "Tables", icon: LayoutGrid },
-    { path: "/inventory", label: "Inventory", icon: Package },
-    { path: "/loyalty", label: "Loyalty", icon: Star },
   ];
 
   const allNavItems = [...coreNavItems];
@@ -46,7 +52,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-1.5 md:space-x-2">
             <ChefHat className="h-6 w-6 md:h-8 md:w-8 text-primary-500" />
             <span className="text-lg md:text-xl font-display font-bold text-secondary-800">
-              RestaurantPOS
+              Orderly
             </span>
           </div>
 

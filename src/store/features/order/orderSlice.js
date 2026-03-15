@@ -5,6 +5,7 @@ const initialState = {
     items: [],
     tableId: '',
     tableNumber: '',
+    waiterId: '',
     waiterName: '',
   },
   orders: [],
@@ -67,12 +68,19 @@ const orderSlice = createSlice({
       state.currentOrder.waiterName = action.payload;
     },
 
+    setWaiterIdentity: (state, action) => {
+      const payload = action.payload || {};
+      state.currentOrder.waiterId = payload.waiterId ?? '';
+      state.currentOrder.waiterName = payload.waiterName ?? '';
+    },
+
     hydrateCurrentOrder: (state, action) => {
       const payload = action.payload || {};
       state.currentOrder = {
         items: Array.isArray(payload.items) ? payload.items : [],
         tableId: payload.tableId ?? '',
         tableNumber: payload.tableNumber ?? '',
+        waiterId: payload.waiterId ?? state.currentOrder.waiterId ?? '',
         waiterName: payload.waiterName ?? '',
       };
     },
@@ -104,6 +112,7 @@ const orderSlice = createSlice({
         items: [],
         tableId: '',
         tableNumber: '',
+        waiterId: state.currentOrder.waiterId,
         waiterName: state.currentOrder.waiterName,
       };
     },
@@ -135,6 +144,7 @@ const orderSlice = createSlice({
         items: [],
         tableId: '',
         tableNumber: '',
+        waiterId: state.currentOrder.waiterId,
         waiterName: state.currentOrder.waiterName,
       };
     },
@@ -172,6 +182,7 @@ export const {
   removeItemFromCurrentOrder,
   setTableNumber,
   setWaiterName,
+  setWaiterIdentity,
   hydrateCurrentOrder,
   setOrders,
   upsertOrder,

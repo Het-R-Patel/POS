@@ -11,17 +11,18 @@ import { useNotifications } from "../../context/NotificationContext";
 import {
   selectCurrentOrderItems,
   selectCurrentOrderTableId,
+  selectCurrentOrderTableNumber,
+  selectCurrentOrderWaiterId,
   selectCurrentOrderWaiterName,
   selectCurrentOrderTotal,
   selectCurrentOrderItemCount,
 } from "../../store/features/order/orderSelectors";
 import {
-  setTableNumber,
-  setWaiterName,
   removeItemFromCurrentOrder,
   resetCurrentOrderAfterSubmit,
   upsertOrder,
   clearCurrentOrder,
+  setWaiterIdentity,
 } from "../../store/features/order/orderSlice";
 
 const OrderSummary = ({
@@ -34,7 +35,6 @@ const OrderSummary = ({
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const { addNotification } = useNotifications();
-  const [waiterId, setWaiterId] = React.useState("");
   const [customerName, setCustomerName] = React.useState("");
   const [paymentStatus, setPaymentStatus] = React.useState("unpaid");
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
@@ -45,9 +45,17 @@ const OrderSummary = ({
 
   const items = useSelector(selectCurrentOrderItems);
   const tableId = useSelector(selectCurrentOrderTableId);
+  const tableNumber = useSelector(selectCurrentOrderTableNumber);
+  const currentOrderWaiterId = useSelector(selectCurrentOrderWaiterId);
   const waiterName = useSelector(selectCurrentOrderWaiterName);
+  const authUser = useSelector((state) => state.auth.user);
   const total = useSelector(selectCurrentOrderTotal);
   const itemCount = useSelector(selectCurrentOrderItemCount);
+
+  const loggedInWaiterId = String(authUser?._id || authUser?.id || "");
+  const loggedInWaiterName = String(
+    authUser?.fullName || authUser?.name || authUser?.username || authUser?.email || "",
+  );
 
   const tables = useQuery({
     queryKey: ["tables"],
@@ -61,8 +69,14 @@ const OrderSummary = ({
     [];
 
   React.useEffect(() => {
+    dispatch(
+      setWaiterIdentity({
+        waiterId: loggedInWaiterId,
+        waiterName: loggedInWaiterName,
+      }),
+    );
+
     if (!initialOrderData) {
-      setWaiterId(waiterName || "");
       setCustomerName("");
       setPaymentStatus("unpaid");
       setPaymentMethod("cash");
@@ -73,7 +87,6 @@ const OrderSummary = ({
       return;
     }
 
-    setWaiterId(initialOrderData.waiterId || initialOrderData.waiterName || waiterName || "");
     setCustomerName(initialOrderData.customerName || "");
     setPaymentStatus(initialOrderData.paymentStatus || "unpaid");
     setPaymentMethod(initialOrderData.paymentMethod || "cash");
@@ -81,7 +94,7 @@ const OrderSummary = ({
     setTip(Number(initialOrderData.tip || 0));
     setSpecialInstructions(initialOrderData.specialInstructions || "");
     setEstimatedTime(Number(initialOrderData.estimatedTime || 20));
-  }, [initialOrderData, waiterName]);
+  }, [dispatch, initialOrderData, loggedInWaiterId, loggedInWaiterName]);
 
   const createOrderMutation = useMutation({
     mutationFn: createOrder,
@@ -138,26 +151,12 @@ const OrderSummary = ({
     },
   });
 
-  const handleTableNumberChange = (value) => {
-    const selectedTable = tableOptions.find((table) => table._id === value);
-    dispatch(
-      setTableNumber({
-        tableId: value,
-        tableNumber: selectedTable?.tableNumber ?? '',
-      })
-    );
-  };
-
-  const handleWaiterNameChange = (value) => {
-    dispatch(setWaiterName(value));
-    setWaiterId(value);
-  };
-
   const handleRemoveItem = (itemId) => {
     dispatch(removeItemFromCurrentOrder(itemId));
   };
 
-  const effectiveWaiterId = waiterId || waiterName;
+  const effectiveWaiterId = loggedInWaiterId || currentOrderWaiterId;
+  const effectiveWaiterName = loggedInWaiterName || waiterName;
   const isUpdateMode = mode === "update";
   const isSubmitting = createOrderMutation.isPending || updateOrderItemsMutation.isPending;
 
@@ -234,14 +233,13 @@ const OrderSummary = ({
           <select
             name="tableNumber"
             value={tableId}
-            onChange={(e) => handleTableNumberChange(e.target.value)}
             className="input w-full rounded-lg border border-gray-300 bg-white px-3 py-2   shadow-sm transition"
-            disabled={tables.isPending}
+            disabled
           >
             {tables.isPending && <option value="">Loading tables...</option>}
             {tables.isError && <option value="">Error loading tables</option>}
 
-            <option value="">Select Table</option>
+            <option value="">{tableNumber ? `Table ${tableNumber}` : "Select Table"}</option>
 
             {tableOptions.map((table) => (
               <option key={table._id} value={table._id}>
@@ -253,14 +251,14 @@ const OrderSummary = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Waiter ID
+            Waiter Name
           </label>
           <input
             type="text"
-            value={waiterId || waiterName}
-            onChange={(e) => handleWaiterNameChange(e.target.value)}
-            placeholder="Enter waiter ID"
+            value={effectiveWaiterName}
+            placeholder="Waiter Name"
             className="input"
+            readOnly
           />
         </div>
 

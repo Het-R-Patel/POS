@@ -23,6 +23,11 @@ export const selectCurrentOrderWaiterName = createSelector(
   (currentOrder) => currentOrder.waiterName
 );
 
+export const selectCurrentOrderWaiterId = createSelector(
+  [selectCurrentOrder],
+  (currentOrder) => currentOrder.waiterId
+);
+
 export const selectCurrentOrderTotal = createSelector([selectCurrentOrderItems], (items) =>
   items.reduce((sum, item) => sum + item.subtotal, 0)
 );

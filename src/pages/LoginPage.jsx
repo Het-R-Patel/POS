@@ -1,36 +1,42 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChefHat, UtensilsCrossed, ShoppingBag, Users, Sparkles } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { ChefHat, UtensilsCrossed, ShoppingBag } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import {
+  clearAuthError,
+  getRoleHomePath,
+  loginUser,
+} from '../store/features/auth/authSlice';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const dispatch = useDispatch();
+  const { isLoading, error: authError } = useSelector((state) => state.auth);
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('kitchen');
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // Simple validation
-    if (!username || !password || !role) {
-      setError('Please fill in all fields');
+
+    if (!identifier || !password) {
+      setValidationError('Please fill in all fields');
       return;
     }
 
-    
-    // Redirect based on role
-    navigate(`/${role}`);
+    setValidationError('');
+
+    try {
+      const result = await dispatch(loginUser({ identifier, password })).unwrap();
+      navigate(getRoleHomePath(result?.user?.role), { replace: true });
+    } catch {
+      return;
+    }
   };
 
-  const roles = [
-    { value: 'waiter', label: 'Waiter', description: 'Take orders from customers', icon: Users },
-    { value: 'kitchen', label: 'Kitchen', description: 'Prepare and manage orders', icon: ChefHat },
-    { value: 'cashier', label: 'Cashier', description: 'Process payments', icon: ShoppingBag },
-    { value: 'admin', label: 'Admin', description: 'Manage system and users', icon: Sparkles },
-  ];
+  const errorMessage = validationError || authError;
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
@@ -45,7 +51,7 @@ const LoginPage = () => {
               </div>
               <div className="ml-3">
                 <h1 className="text-2xl font-display font-bold text-gray-900">
-                  Restaurant POS
+                  Orderly
                 </h1>
                 <p className="text-sm text-gray-600">Point of Sale System</p>
               </div>
@@ -60,38 +66,42 @@ const LoginPage = () => {
 
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* Username */}
             <Input
-              label="Username"
+              label="Username or Email"
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              error={error && !username ? 'Username is required' : ''}
+              value={identifier}
+              onChange={(e) => {
+                if (authError) {
+                  dispatch(clearAuthError());
+                }
+                setIdentifier(e.target.value);
+              }}
+              placeholder="Enter your username or email"
+              error={validationError && !identifier ? 'Username or email is required' : ''}
             />
 
-            {/* Password */}
             <Input
               label="Password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                if (authError) {
+                  dispatch(clearAuthError());
+                }
+                setPassword(e.target.value);
+              }}
               placeholder="Enter your password"
-              error={error && !password ? 'Password is required' : ''}
+              error={validationError && !password ? 'Password is required' : ''}
             />
 
-            
-
-            {/* Error Message */}
-            {error && (
+            {errorMessage && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-800">{errorMessage}</p>
               </div>
             )}
 
-            {/* Submit Button */}
-            <Button type="submit" variant="primary" size="lg" fullWidth>
-              Sign In
+            <Button type="submit" variant="primary" size="lg" fullWidth disabled={isLoading}>
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
 
             {/* Additional Links */}
@@ -105,7 +115,7 @@ const LoginPage = () => {
           {/* Footer */}
           <div className="mt-8 pt-8 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-500">
-              © 2026 Restaurant POS System. All rights reserved.
+              © 2026 Orderly System. All rights reserved.
             </p>
           </div>
         </div>

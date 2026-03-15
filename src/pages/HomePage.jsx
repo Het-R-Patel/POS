@@ -40,7 +40,7 @@ const HomePage = () => {
             <ChefHat className="h-20 w-20 text-primary-500" />
           </div>
           <h1 className="text-5xl md:text-6xl font-display font-bold text-gray-900 mb-4">
-            Restaurant POS System
+            Orderly System
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Streamline your restaurant operations with our modern point-of-sale system.

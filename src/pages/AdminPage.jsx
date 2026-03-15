@@ -23,14 +23,17 @@ import Drawer from '../components/ui/Drawer';
 import NotificationBell from '../components/notifications/NotificationBell';
 import { useNotifications } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logoutUser } from '../store/features/auth/authSlice';
 
 const AdminPage = () => {
+  const dispatch = useDispatch();
   const [activeView, setActiveView] = useState('dashboard');
   const { notifications, removeNotification, markAsRead, clearAll } = useNotifications();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    dispatch(logoutUser());
     navigate('/login');
   };
 
@@ -51,7 +54,7 @@ const AdminPage = () => {
           <h1 className="text-2xl font-display font-bold text-gray-900">
             Admin Panel
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Restaurant POS</p>
+          <p className="text-sm text-gray-500 mt-1">Orderly</p>
         </div>
 
         <nav className="p-4 space-y-1">

@@ -24,7 +24,7 @@ const ReceiptPreview = ({
       {/* Receipt Content */}
       <div className="bg-white border-2 border-dashed border-gray-300 p-6 rounded-lg font-mono text-sm mb-4">
         <div className="text-center mb-4">
-          <h4 className="font-bold text-lg">RESTAURANT POS</h4>
+          <h4 className="font-bold text-lg">Orderly</h4>
           <p className="text-xs text-gray-600">123 Main Street</p>
           <p className="text-xs text-gray-600">Phone: (555) 123-4567</p>
         </div>

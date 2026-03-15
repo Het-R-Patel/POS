@@ -107,7 +107,7 @@ const WaiterActiveOrdersSubPage = ({
       align: "right",
       render: (row) => (
         <div className="flex justify-end gap-2">
-          {row.status !== "preparing" && (
+          {row.status !== "preparing" && row.status !== "ready" && (
             <Button
               size="sm"
               variant="primary"

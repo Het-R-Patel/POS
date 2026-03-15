@@ -18,7 +18,7 @@ const KitchenOrderCard = ({ order, onStatusUpdate }) => {
             <Badge status={order.status} />
           </div>
           <p className="text-gray-600">Table: {order.tableId.tableNumber}</p>
-          <p className="text-sm text-gray-500">Waiter: {order.waiterId}</p>
+          <p className="text-sm text-gray-500">Waiter: {order.waiterId.fullName}</p>
         </div>
         <div className="text-right">
           <div className={`flex items-center gap-1 text-gray-600"}`}>

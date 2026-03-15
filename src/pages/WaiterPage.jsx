@@ -62,16 +62,23 @@ const normalizeOrderForEditor = (order) => {
     order?.table_number ||
     (typeof tableSource === "object" ? tableSource?.tableNumber || tableSource?.table_number : "") ||
     "";
+  const waiterIdentity = order?.waiterId || order?.waiter_id || order?.waiter;
+  const waiterId =
+    (typeof waiterIdentity === "object"
+      ? waiterIdentity?._id || waiterIdentity?.id
+      : waiterIdentity) ||
+    "";
   const waiterName =
     order?.waiterName ||
-    order?.waiterId ||
-    order?.waiter_id ||
-    (typeof order?.waiterId === "object" ? order?.waiterId?.name : "") ||
+    (typeof waiterIdentity === "object"
+      ? waiterIdentity?.fullName || waiterIdentity?.name || waiterIdentity?.username || waiterIdentity?.email
+      : "") ||
     "";
 
   return {
     tableId,
     tableNumber: tableNumber ? String(tableNumber) : "",
+    waiterId: waiterId ? String(waiterId) : "",
     waiterName,
     items: normalizeOrderItemsForEditor(order?.items),
   };
@@ -84,6 +91,7 @@ const WaiterPage = () => {
   const queryClient = useQueryClient();
   const { addNotification } = useNotifications();
   const orders = useSelector(selectAllOrders);
+  const authUser = useSelector((state) => state.auth.user);
   const [view, setView] = React.useState("active-orders");
   const [selectedTableNumber, setSelectedTableNumber] = React.useState("");
   const [editorMode, setEditorMode] = React.useState("create");
@@ -193,12 +201,17 @@ const WaiterPage = () => {
       return;
     }
 
+    const loggedInWaiterId = authUser?._id || authUser?.id || '';
+    const loggedInWaiterName =
+      authUser?.fullName || authUser?.name || authUser?.username || authUser?.email || '';
+
     dispatch(
       hydrateCurrentOrder({
         items: [],
         tableId: selected._id,
         tableNumber: String(selected.tableNumber || ""),
-        waiterName: "",
+        waiterId: String(loggedInWaiterId || ''),
+        waiterName: String(loggedInWaiterName || ''),
       }),
     );
 
