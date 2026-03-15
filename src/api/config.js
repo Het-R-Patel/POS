@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// Base API URL - change this to match your backend server
-const API_BASE_URL = 'api';
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+  ? '/api'
+  : 'https://orderly-backend-hy15.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
 const AUTH_STORAGE_KEY = 'pos_auth';
 
 // Create axios instance with default config
