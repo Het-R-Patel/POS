@@ -3,6 +3,35 @@ export { store } from './store';
 
 export { loginUser, logoutUser, clearAuthError, getRoleHomePath, normalizeRole } from './features/auth/authSlice';
 
+// Export notifications actions and selectors
+export {
+  loadNotifications,
+  loadUnreadNotifications,
+  loadNotificationStats,
+  createNotification,
+  updateNotification,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+  deleteAllNotificationsForUser,
+  cleanupReadNotifications,
+  notificationReceived,
+  notificationsReceived,
+  notificationRemoved,
+  notificationMarkedReadLocal,
+  allNotificationsMarkedReadLocal,
+  notificationsCleared,
+  notificationStatsReceived,
+  notificationErrorCleared,
+  selectAllNotifications,
+  selectUnreadNotifications,
+  selectUnreadNotificationCount,
+  selectNotificationStats,
+  selectNotificationsLoading,
+  selectNotificationStatsLoading,
+  selectNotificationsError,
+} from './features/notifications/notificationSlice';
+
 // Export actions
 export {
   addItemToCurrentOrder,

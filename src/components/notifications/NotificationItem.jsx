@@ -6,6 +6,15 @@ const NotificationItem = ({
   onRemove,
   onMarkAsRead,
 }) => {
+  const resolveDate = (value) => {
+    if (value instanceof Date) {
+      return value;
+    }
+
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  };
+
   const getIcon = () => {
     switch (notification.type) {
       case 'success':
@@ -33,7 +42,8 @@ const NotificationItem = ({
   };
 
   const getTimeAgo = (date) => {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    const resolvedDate = resolveDate(date);
+    const seconds = Math.floor((new Date().getTime() - resolvedDate.getTime()) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
@@ -57,7 +67,7 @@ const NotificationItem = ({
           </p>
           <p className="text-sm text-gray-700 mb-2">{notification.message}</p>
           <p className="text-xs text-gray-500">
-            {getTimeAgo(notification.timestamp)}
+            {getTimeAgo(notification.timestamp || notification.createdAt)}
           </p>
         </div>
         <button

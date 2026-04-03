@@ -1,79 +1,95 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-
-const NotificationContext = createContext(undefined);
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  createNotification,
+  deleteAllNotificationsForUser,
+  deleteNotification,
+  loadNotificationStats,
+  loadNotifications,
+  markNotificationAsRead,
+  notificationErrorCleared,
+  selectAllNotifications,
+  selectNotificationStats,
+  selectNotificationsError,
+  selectNotificationsLoading,
+  selectUnreadNotificationCount,
+  notificationsCleared,
+} from '../store';
 
 export const useNotifications = () => {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within NotificationProvider');
-  }
-  return context;
+  const dispatch = useDispatch();
+  const notifications = useSelector(selectAllNotifications);
+  const unreadCount = useSelector(selectUnreadNotificationCount);
+  const stats = useSelector(selectNotificationStats);
+  const isLoading = useSelector(selectNotificationsLoading);
+  const error = useSelector(selectNotificationsError);
+  const authUser = useSelector((state) => state.auth.user);
+  const currentUserId = authUser?._id || authUser?.id || '';
+
+  const addNotification = (notification) =>
+    dispatch(
+      createNotification({
+        ...notification,
+        userId: notification?.userId ?? currentUserId ?? null,
+      }),
+    );
+
+  const removeNotification = (notificationId) => dispatch(deleteNotification(notificationId));
+
+  const markAsRead = (notificationId) => dispatch(markNotificationAsRead(notificationId));
+
+  const clearAll = () => {
+    if (currentUserId) {
+      dispatch(deleteAllNotificationsForUser(currentUserId));
+      return;
+    }
+
+    dispatch(notificationsCleared());
+  };
+
+  const refreshNotifications = (params = {}) =>
+    dispatch(loadNotifications({ ...params, userId: params.userId !== undefined ? params.userId : null }));
+
+  return {
+    notifications,
+    unreadCount,
+    stats,
+    isLoading,
+    error,
+    addNotification,
+    removeNotification,
+    markAsRead,
+    clearAll,
+    refreshNotifications,
+    clearError: () => dispatch(notificationErrorCleared()),
+  };
 };
 
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([
-    // Sample notifications for demonstration
-    {
-      id: '1',
-      type: 'info',
-      title: 'New Order',
-      message: 'Table 5 has placed a new order',
-      timestamp: new Date(Date.now() - 300000),
-      read: false,
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'Order Ready',
-      message: 'Order #1023 is ready for pickup',
-      timestamp: new Date(Date.now() - 600000),
-      read: false,
-    },
-    {
-      id: '3',
-      type: 'success',
-      title: 'Payment Received',
-      message: 'Payment of $85.50 received for Table 8',
-      timestamp: new Date(Date.now() - 1800000),
-      read: true,
-    },
-  ]);
+  const dispatch = useDispatch();
+  const authUser = useSelector((state) => state.auth.user);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const currentUserId = authUser?._id || authUser?.id || '';
 
-  const addNotification = useCallback((notification) => {
-    const newNotification = {
-      ...notification,
-      id: Date.now().toString(),
-      timestamp: new Date(),
-      read: false,
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId) {
+      return;
+    }
+
+    const fetchAll = () => {
+      // Fetch global notifications so they appear across all interfaces
+      dispatch(loadNotifications({ userId: null, page: 1, limit: 50, sortBy: 'createdAt', order: 'desc' }));
+      dispatch(loadNotificationStats({ userId: currentUserId }));
     };
-    setNotifications((prev) => [newNotification, ...prev]);
-  }, []);
 
-  const removeNotification = useCallback((id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
+    // Initial fetch
+    fetchAll();
 
-  const markAsRead = useCallback((id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  }, []);
+    // Poll every 5 seconds for new notifications
+    const intervalId = setInterval(fetchAll, 5000);
 
-  const clearAll = useCallback(() => {
-    setNotifications([]);
-  }, []);
+    return () => clearInterval(intervalId);
+  }, [dispatch, isAuthenticated, currentUserId]);
 
-  return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        addNotification,
-        removeNotification,
-        markAsRead,
-        clearAll,
-      }}
-    >
-      {children}
-    </NotificationContext.Provider>
-  );
+  return children;
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -23,14 +23,22 @@ import Drawer from '../components/ui/Drawer';
 import NotificationBell from '../components/notifications/NotificationBell';
 import { useNotifications } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../store/features/auth/authSlice';
+import { fetchDashboardStats, fetchAdminOrders, fetchAdminUsers, fetchAdminMenuItems, createAdminUser } from '../store/features/admin/adminSlice';
 
 const AdminPage = () => {
   const dispatch = useDispatch();
   const [activeView, setActiveView] = useState('dashboard');
   const { notifications, removeNotification, markAsRead, clearAll } = useNotifications();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchDashboardStats());
+    dispatch(fetchAdminOrders({ page: 1, limit: 10 }));
+    dispatch(fetchAdminUsers());
+    dispatch(fetchAdminMenuItems({ page: 1, limit: 50 }));
+  }, [dispatch]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -135,6 +143,9 @@ const AdminPage = () => {
 
 // Dashboard View
 const DashboardView = () => {
+  const { dashboard, users, menuItems, orders } = useSelector((state) => state.admin);
+  const orderStats = dashboard?.stats?.orderStats || {};
+  
   return (
     <div className="p-4 md:p-6 lg:p-8">
       <div className="mb-6 md:mb-8">
@@ -149,8 +160,8 @@ const DashboardView = () => {
             <p className="text-blue-100">Total Users</p>
             <Users className="h-8 w-8 text-blue-200" />
           </div>
-          <p className="text-4xl font-bold">24</p>
-          <p className="text-sm text-blue-100 mt-2">+3 this week</p>
+          <p className="text-4xl font-bold">{users?.list?.length || 0}</p>
+          <p className="text-sm text-blue-100 mt-2">Active Staff</p>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white" padding="lg">
@@ -158,17 +169,17 @@ const DashboardView = () => {
             <p className="text-green-100">Menu Items</p>
             <UtensilsCrossed className="h-8 w-8 text-green-200" />
           </div>
-          <p className="text-4xl font-bold">156</p>
-          <p className="text-sm text-green-100 mt-2">12 categories</p>
+          <p className="text-4xl font-bold">{menuItems?.list?.length || 0}</p>
+          <p className="text-sm text-green-100 mt-2">Available dishes</p>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white" padding="lg">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-purple-100">Today's Orders</p>
+            <p className="text-purple-100">Total Orders</p>
             <ShoppingBag className="h-8 w-8 text-purple-200" />
           </div>
-          <p className="text-4xl font-bold">87</p>
-          <p className="text-sm text-purple-100 mt-2">+15% from yesterday</p>
+          <p className="text-4xl font-bold">{orderStats?.totalOrders || orders?.total || 0}</p>
+          <p className="text-sm text-purple-100 mt-2">Overall processed</p>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white" padding="lg">
@@ -176,8 +187,8 @@ const DashboardView = () => {
             <p className="text-orange-100">Revenue</p>
             <BarChart3 className="h-8 w-8 text-orange-200" />
           </div>
-          <p className="text-4xl font-bold">$4.2K</p>
-          <p className="text-sm text-orange-100 mt-2">Today's total</p>
+          <p className="text-4xl font-bold">${orderStats?.totalRevenue || 0}</p>
+          <p className="text-sm text-orange-100 mt-2">Lifetime total</p>
         </Card>
       </div>
 
@@ -186,35 +197,41 @@ const DashboardView = () => {
         <Card padding="lg">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Orders</h3>
           <div className="space-y-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {orders?.list?.slice(0, 5).map((order, i) => (
+              <div key={order.id || i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-semibold text-gray-900">Order #{1000 + i}</p>
-                  <p className="text-sm text-gray-500">Table {i * 3}</p>
+                  <p className="font-semibold text-gray-900">Order #{order.orderNumber || order.id || i}</p>
+                  <p className="text-sm text-gray-500">Table {order.table?.tableNumber || order.tableId?.tableNumber || (typeof order.tableId === 'string' ? order.tableId : i)}</p>
                 </div>
-                <Badge variant="success">Completed</Badge>
+                <Badge variant="success">{order.status || 'Completed'}</Badge>
               </div>
             ))}
+            {(!orders?.list || orders?.list?.length === 0) && (
+              <p className="text-sm text-gray-500 text-center">No recent orders</p>
+            )}
           </div>
         </Card>
 
         <Card padding="lg">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Active Staff</h3>
           <div className="space-y-3">
-            {['John Doe', 'Sarah Smith', 'Mike Johnson', 'Emma Wilson'].map((name, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {users?.list?.slice(0, 5).map((user, i) => (
+              <div key={user.id || i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span className="text-primary-700 font-semibold">{name[0]}</span>
+                    <span className="text-primary-700 font-semibold">{(user.fullName || user.username || 'A')[0]}</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{name}</p>
-                    <p className="text-sm text-gray-500">Waiter</p>
+                    <p className="font-semibold text-gray-900">{user.fullName || user.username}</p>
+                    <p className="text-sm text-gray-500 capitalize">{user.role || 'Staff'}</p>
                   </div>
                 </div>
                 <div className="h-2 w-2 rounded-full bg-green-500"></div>
               </div>
             ))}
+            {(!users?.list || users?.list?.length === 0) && (
+              <p className="text-sm text-gray-500 text-center">No staff found</p>
+            )}
           </div>
         </Card>
       </div>
@@ -224,6 +241,8 @@ const DashboardView = () => {
 
 // User Management View
 const UserManagementView = () => {
+  const dispatch = useDispatch();
+  const { users } = useSelector((state) => state.admin);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -232,11 +251,16 @@ const UserManagementView = () => {
     password: '',
     role: 'waiter',
     phone: '',
+    username: ''
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('User data:', formData);
+    dispatch(createAdminUser({
+      ...formData,
+      fullName: `${formData.firstName} ${formData.lastName}`,
+      confirmPassword: formData.password
+    }));
     setIsDrawerOpen(false);
     setFormData({
       firstName: '',
@@ -245,6 +269,7 @@ const UserManagementView = () => {
       password: '',
       role: 'waiter',
       phone: '',
+      username: ''
     });
   };
 
@@ -292,16 +317,11 @@ const UserManagementView = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {[
-                { name: 'John Doe', email: 'john@restaurant.com', role: 'Waiter', status: 'Active' },
-                { name: 'Sarah Smith', email: 'sarah@restaurant.com', role: 'Kitchen', status: 'Active' },
-                { name: 'Mike Johnson', email: 'mike@restaurant.com', role: 'Cashier', status: 'Active' },
-                { name: 'Emma Wilson', email: 'emma@restaurant.com', role: 'Waiter', status: 'Inactive' },
-              ].map((user, i) => (
-                <tr key={i} className="hover:bg-gray-50">
+              {users?.list?.map((user, i) => (
+                <tr key={user.id || i} className="hover:bg-gray-50">
                   <td className="px-3 md:px-6 py-3 md:py-4">
                     <div>
-                      <p className="font-semibold text-gray-900">{user.name}</p>
+                      <p className="font-semibold text-gray-900">{user.fullName || user.username}</p>
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                   </td>
@@ -309,12 +329,12 @@ const UserManagementView = () => {
                     <Badge variant="info">{user.role}</Badge>
                   </td>
                   <td className="px-3 md:px-6 py-3 md:py-4">
-                    <Badge variant={user.status === 'Active' ? 'success' : 'default'}>
-                      {user.status}
+                    <Badge variant={user.isActive !== false ? 'success' : 'default'}>
+                      {user.isActive !== false ? 'Active' : 'Inactive'}
                     </Badge>
                   </td>
                   <td className="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-600 hidden sm:table-cell">
-                    Jan {i + 1}, 2026
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : `Jan ${i + 1}, 2026`}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end space-x-2">
@@ -331,6 +351,13 @@ const UserManagementView = () => {
                   </td>
                 </tr>
               ))}
+              {(!users?.list || users?.list?.length === 0) && (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                    No users found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -361,6 +388,15 @@ const UserManagementView = () => {
               required
             />
           </div>
+          
+          <Input
+            label="Username"
+            type="text"
+            value={formData.username}
+            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            placeholder="johndoe"
+            required
+          />
 
           <Input
             label="Email Address"
@@ -442,6 +478,7 @@ const UserManagementView = () => {
 
 // Menu Management View
 const MenuManagementView = () => {
+  const { menuItems } = useSelector((state) => state.admin);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -456,6 +493,7 @@ const MenuManagementView = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Menu item data:', formData);
+    // API logic to create menu item would be dispatched here
     setIsDrawerOpen(false);
     setFormData({
       name: '',
@@ -499,21 +537,14 @@ const MenuManagementView = () => {
 
       {/* Menu Items Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-        {[
-          { name: 'Grilled Salmon', category: 'Main Course', price: 24.99, available: true },
-          { name: 'Caesar Salad', category: 'Appetizer', price: 12.99, available: true },
-          { name: 'Chocolate Cake', category: 'Dessert', price: 8.99, available: false },
-          { name: 'Beef Steak', category: 'Main Course', price: 32.99, available: true },
-          { name: 'Spring Rolls', category: 'Appetizer', price: 8.99, available: true },
-          { name: 'Tiramisu', category: 'Dessert', price: 7.99, available: true },
-        ].map((item, i) => (
-          <Card key={i} padding="lg">
+        {menuItems?.list?.map((item, i) => (
+          <Card key={item.id || item._id || i} padding="lg">
             <div className="flex items-start justify-between mb-4">
               <div className="h-16 w-16 bg-gray-200 rounded-lg flex items-center justify-center">
                 <UtensilsCrossed className="h-8 w-8 text-gray-400" />
               </div>
-              <Badge variant={item.available ? 'success' : 'error'}>
-                {item.available ? 'Available' : 'Out of Stock'}
+              <Badge variant={item.isAvailable !== false ? 'success' : 'error'}>
+                {item.isAvailable !== false ? 'Available' : 'Out of Stock'}
               </Badge>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">{item.name}</h3>
@@ -533,6 +564,9 @@ const MenuManagementView = () => {
             </div>
           </Card>
         ))}
+        {(!menuItems?.list || menuItems?.list?.length === 0) && (
+           <p className="col-span-full text-center text-gray-500 py-8">No menu items found</p>
+        )}
       </div>
 
       {/* Add Dish Drawer */}
@@ -672,6 +706,9 @@ const MenuManagementView = () => {
 
 // Orders View
 const OrdersView = () => {
+  const { orders, dashboard } = useSelector((state) => state.admin);
+  const orderStats = dashboard?.stats?.orderStats || {};
+
   return (
     <div className="p-4 md:p-6 lg:p-8">
       <div className="mb-6 md:mb-8">
@@ -682,10 +719,10 @@ const OrdersView = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
         {[
-          { label: 'Pending', count: 8, color: 'yellow' },
-          { label: 'Preparing', count: 12, color: 'blue' },
-          { label: 'Ready', count: 5, color: 'green' },
-          { label: 'Completed', count: 45, color: 'gray' },
+          { label: 'Pending', count: orderStats?.statusCounts?.pending || 0, color: 'yellow' },
+          { label: 'Preparing', count: orderStats?.statusCounts?.preparing || 0, color: 'blue' },
+          { label: 'Ready', count: orderStats?.statusCounts?.ready || 0, color: 'green' },
+          { label: 'Completed', count: orderStats?.statusCounts?.completed || 0, color: 'gray' },
         ].map((stat) => (
           <Card key={stat.label} padding="md">
             <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
@@ -697,26 +734,29 @@ const OrdersView = () => {
       {/* Orders List */}
       <Card padding="lg">
         <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          {orders?.list?.map((order, i) => (
+            <div key={order.id || i} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex-1">
                 <div className="flex items-center space-x-4">
                   <div>
-                    <p className="font-bold text-gray-900">Order #{1000 + i}</p>
-                    <p className="text-sm text-gray-500">Table {i * 2}</p>
+                    <p className="font-bold text-gray-900">Order #{order.orderNumber || order.id || i}</p>
+                    <p className="text-sm text-gray-500">Table {order.table?.tableNumber || order.tableId || 'N/A'}</p>
                   </div>
-                  <Badge status="preparing" />
+                  <Badge status={order.status?.toLowerCase()} />
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">${(25 + i * 10).toFixed(2)}</p>
-                <p className="text-sm text-gray-500">{i * 5} min ago</p>
+                <p className="font-semibold text-gray-900">${(order.totalAmount || order.subtotal || 0).toFixed(2)}</p>
+                <p className="text-sm text-gray-500">{order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'Just now'}</p>
               </div>
               <Button variant="outline" size="sm" className="ml-4">
                 <Eye className="h-4 w-4" />
               </Button>
             </div>
           ))}
+          {(!orders?.list || orders?.list?.length === 0) && (
+            <p className="text-center text-gray-500 py-4">No orders currently</p>
+          )}
         </div>
       </Card>
     </div>

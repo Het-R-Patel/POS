@@ -1,11 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import orderReducer from './features/order/orderSlice';
 import authReducer from './features/auth/authSlice';
+import notificationsReducer from './features/notifications/notificationSlice';
+import adminReducer from './features/admin/adminSlice';
 
 export const store = configureStore({
   reducer: {
     order: orderReducer,
     auth: authReducer,
+    notifications: notificationsReducer,
+    admin: adminReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

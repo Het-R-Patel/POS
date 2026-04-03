@@ -12,6 +12,7 @@ import AdminPage from './pages/AdminPage';
 import TableManagementPage from './pages/features/TableManagementPage';
 import InventoryManagementPage from './pages/features/InventoryManagementPage';
 import CustomerLoyaltyPage from './pages/features/CustomerLoyaltyPage';
+import AIChatBot from './components/ai/AIChatBot';
 import { getRoleHomePath } from './store/features/auth/authSlice';
 
 const LoginOrRoleRedirect = () => {
@@ -44,6 +45,8 @@ const App = () => {
                 <div className="min-h-screen bg-gray-50">
                   <Navigation />
                   <WaiterPage />
+                  <AIChatBot />
+
                 </div>
               </ProtectedRoute>
             }
