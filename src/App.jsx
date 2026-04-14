@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { NotificationProvider } from './context/NotificationContext';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -13,7 +13,7 @@ import TableManagementPage from './pages/features/TableManagementPage';
 import InventoryManagementPage from './pages/features/InventoryManagementPage';
 import CustomerLoyaltyPage from './pages/features/CustomerLoyaltyPage';
 import AIChatBot from './components/ai/AIChatBot';
-import { getRoleHomePath } from './store/features/auth/authSlice';
+import { getRoleHomePath, refreshTokenThunk } from './store/features/auth/authSlice';
 
 const LoginOrRoleRedirect = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
@@ -32,6 +32,16 @@ const RootRedirect = () => {
 };
 
 const App = () => {
+  const { isAuthenticated, refreshToken } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Proactively refresh token if we believe we're authenticated on a fresh load.
+    if (isAuthenticated && refreshToken) {
+      dispatch(refreshTokenThunk());
+    }
+  }, [dispatch]); // Only trigger once on mount
+
   return (
     <Router>
       <NotificationProvider>

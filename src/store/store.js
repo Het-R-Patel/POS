@@ -3,6 +3,7 @@ import orderReducer from './features/order/orderSlice';
 import authReducer from './features/auth/authSlice';
 import notificationsReducer from './features/notifications/notificationSlice';
 import adminReducer from './features/admin/adminSlice';
+import { setupInterceptors } from '../api/config';
 
 export const store = configureStore({
   reducer: {
@@ -19,9 +20,12 @@ export const store = configureStore({
         // Ignore these field paths in all actions
         ignoredActionPaths: ['payload.timestamp', 'payload.createdAt', 'payload.updatedAt'],
         // Ignore these paths in the state
-        ignoredPaths: ['order.orders'],
+        ignoredPaths: ['order.history.createdAt', 'order.orders'],
       },
     }),
 });
+
+// Setup interceptors with Redux store to manage token refreshes automatically inside axios
+setupInterceptors(store);
 
 export default store;

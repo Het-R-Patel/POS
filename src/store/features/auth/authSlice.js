@@ -99,6 +99,46 @@ export const loginUser = createAsyncThunk(
   },
 );
 
+export const refreshTokenThunk = createAsyncThunk(
+  'auth/refreshTokenThunk',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const currentRefreshToken = state.auth.refreshToken;
+      
+      if (!currentRefreshToken) {
+        return rejectWithValue('No refresh token available');
+      }
+
+      // We use fetch or an un-intercepted axios call to avoid endless loops
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '/api' : 'https://orderly-backend-hy15.onrender.com/api')}/auth/refresh-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken: currentRefreshToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Refresh token invalid or expired');
+      }
+
+      const data = await response.json();
+      
+      // Assuming backend returns { data: { accessToken, refreshToken, user... } }
+      const payloadData = data?.data || data;
+      
+      return {
+        accessToken: payloadData?.tokens?.accessToken || payloadData?.accessToken || '',
+        refreshToken: payloadData?.tokens?.refreshToken || payloadData?.refreshToken || currentRefreshToken,
+        user: payloadData?.user || state.auth.user, // optionally update user if provided
+      };
+    } catch (error) {
+      return rejectWithValue(error.message || 'Unable to refresh token');
+    }
+  },
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -144,6 +184,33 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.isLoading = false;
         state.error = action.payload || 'Unable to login';
+        clearPersistedAuth();
+      })
+      .addCase(refreshTokenThunk.fulfilled, (state, action) => {
+        const { user, accessToken, refreshToken } = action.payload;
+        state.accessToken = accessToken;
+        state.refreshToken = refreshToken;
+        state.isAuthenticated = true;
+        if (user) {
+           state.user = {
+            ...user,
+            role: normalizeRole(user?.role),
+          };
+        }
+
+        persistAuth({
+          user: state.user,
+          accessToken,
+          refreshToken,
+        });
+      })
+      .addCase(refreshTokenThunk.rejected, (state, action) => {
+        state.user = null;
+        state.accessToken = '';
+        state.refreshToken = '';
+        state.isAuthenticated = false;
+        state.isLoading = false;
+        state.error = 'Session expired, please login again';
         clearPersistedAuth();
       });
   },

@@ -36,7 +36,7 @@ const ReceiptPreview = ({
           </div>
           <div className="flex justify-between mb-1">
             <span>Table:</span>
-            <span>{order.tableNumber}</span>
+            <span>{order?.table?.tableNumber || order?.tableId?.tableNumber || (typeof order.tableNumber === 'object' ? order.tableNumber?.tableNumber : order.tableNumber)}</span>
           </div>
           <div className="flex justify-between mb-1">
             <span>Date:</span>

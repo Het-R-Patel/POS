@@ -8,7 +8,7 @@ const AIChatBot = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 h-14 w-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 z-[9999]"
+        className="fixed bottom-6 right-6 h-14 w-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 z-[9999]"
       >
         <Bot className="h-7 w-7" />
       </button>
@@ -17,7 +17,7 @@ const AIChatBot = () => {
 
   return (
     <div 
-      className="fixed bottom-6 left-6 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[9999] flex flex-col overflow-hidden" 
+      className="fixed bottom-6 right-6 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[9999] flex flex-col overflow-hidden" 
       style={{ height: '500px' }}
     >
       {/* Header */}

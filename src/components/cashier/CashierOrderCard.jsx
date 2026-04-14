@@ -30,7 +30,7 @@ const CashierOrderCard = ({ order, onPaymentComplete }) => {
             </h3>
             <Badge status={order.status} />
           </div>
-          <p className="text-gray-600">Table: {order.tableNumber}</p>
+          <p className="text-gray-600">Table: {order?.table?.tableNumber || order?.tableId?.tableNumber || (typeof order.tableNumber === 'object' ? order.tableNumber?.tableNumber : order.tableNumber)}</p>
           <p className="text-sm text-gray-500">
             {new Date(order.createdAt).toLocaleTimeString()}
           </p>

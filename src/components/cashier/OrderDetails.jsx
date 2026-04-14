@@ -17,7 +17,7 @@ const OrderDetails = ({ order }) => {
           <h3 className="text-xl font-bold text-gray-900">
             Order #{order.id}
           </h3>
-          <p className="text-sm text-gray-500">Table {order.tableNumber}</p>
+          <p className="text-sm text-gray-500">Table {order?.table?.tableNumber || order?.tableId?.tableNumber || (typeof order.tableNumber === 'object' ? order.tableNumber?.tableNumber : order.tableNumber)}</p>
         </div>
         <Badge status={order.status} />
       </div>

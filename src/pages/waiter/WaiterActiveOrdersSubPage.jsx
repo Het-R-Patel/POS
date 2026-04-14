@@ -6,9 +6,11 @@ import Button from "../../components/ui/Button";
 const getOrderId = (order) => order?.id || order?._id;
 
 const getTableLabel = (order) => {
+  if (typeof order?.tableNumber === 'object') return order.tableNumber.tableNumber || '-';
   if (order?.tableNumber) return order.tableNumber;
   if (order?.tableId?.tableNumber) return order.tableId.tableNumber;
   if (order?.table?.tableNumber) return order.table.tableNumber;
+  if (typeof order?.tableId === 'string') return order.tableId;
   return "-";
 };
 

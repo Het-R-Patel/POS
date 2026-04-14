@@ -17,8 +17,8 @@ const KitchenOrderCard = ({ order, onStatusUpdate }) => {
             </h3>
             <Badge status={order.status} />
           </div>
-          <p className="text-gray-600">Table: {order.tableId.tableNumber}</p>
-          <p className="text-sm text-gray-500">Waiter: {order.waiterId.fullName}</p>
+          <p className="text-gray-600">Table: {order?.table?.tableNumber || order?.tableId?.tableNumber || (typeof order.tableNumber === 'object' ? order.tableNumber?.tableNumber : order.tableNumber) || (typeof order.tableId === 'string' ? order.tableId : '')}</p>
+          <p className="text-sm text-gray-500">Waiter: {order?.waiterId?.fullName || (typeof order.waiterId === 'string' ? order.waiterId : 'Staff')}</p>
         </div>
         <div className="text-right">
           <div className={`flex items-center gap-1 text-gray-600"}`}>

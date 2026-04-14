@@ -35,7 +35,7 @@ const OrderCard = ({
           <div className="flex items-center space-x-2 mt-1">
             <Users className="h-4 w-4 text-gray-500" />
             <span className="text-sm text-gray-600">
-              Table {order.tableNumber}
+              Table {order?.table?.tableNumber || order?.tableId?.tableNumber || (typeof order.tableNumber === 'object' ? order.tableNumber?.tableNumber : order.tableNumber) || (typeof order.tableId === 'string' ? order.tableId : '')}
             </span>
           </div>
         </div>

@@ -7,7 +7,7 @@ import axiosInstance from './config';
 export const fetchCategories = async () => {
   try {
     const response = await axiosInstance.get('/categories');
-    return response.data.data;
+    return response.data?.data || response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch categories');
   }
