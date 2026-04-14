@@ -10,7 +10,10 @@ export const fetchMenuItems = async (params) => {
     const response = await axiosInstance.get(
       `/menu-items?${params.category ? `category=${params.category}&` : ""}${params.searchQuery ? `search=${params.searchQuery}&` : ""}page=${params.currentPage}&limit=${params.limit}`,
     );
-    return response.data;
+    return {
+      data: response.data,
+      pagination: response.pagination || response.data?.pagination || {},
+    };
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch menu items",

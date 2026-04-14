@@ -76,7 +76,7 @@ const MenuGrid = ({ onItemQuantityChange, orderItems = [] }) => {
                     ? "bg-primary-500 text-white shadow-md"
                     : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                 }`}
-                data-categoryId={category._id || category.id}
+                data-categoryid={category._id || category.id}
               >
                 {category.name}
               </button>
@@ -103,12 +103,12 @@ const MenuGrid = ({ onItemQuantityChange, orderItems = [] }) => {
       {!items.isPending && !items.isError && (
         <PaginatedMenuItems
           items={items.data?.data}
-          totalPages={items.data?.pagination.totalPages}
-          pageNumber={items.data?.pagination.page}
+          totalPages={items.data?.pagination?.totalPages}
+          pageNumber={items.data?.pagination?.page}
           onAddToOrder={onItemQuantityChange}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          itemsPerPage={items.data?.pagination.limit} // Use API pagination limit if available
+          itemsPerPage={items.data?.pagination?.limit} // Use API pagination limit if available
           orderItems={orderItems}
         />
       )}
