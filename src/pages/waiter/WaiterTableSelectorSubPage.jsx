@@ -17,7 +17,17 @@ const WaiterTableSelectorSubPage = ({
     queryFn: fetchTables,
   });
 
-  const tables = tablesQuery.data?.data || [];
+  let tables =
+    tablesQuery.data?.data?.tables ||
+    tablesQuery.data?.data ||
+    tablesQuery.data?.tables ||
+    tablesQuery.data ||
+    [];
+  
+  if (!Array.isArray(tables)) {
+    tables = [];
+  }
+
   const tableNumbers = tables.map((table) => String(table?.tableNumber || ''));
   const occupiedTables = tables
     .filter((table) => table?.status === 'occupied')
