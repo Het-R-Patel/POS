@@ -7,8 +7,8 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api": {
-        target: "https://orderly-backend-hy15.onrender.com",
-        // target: "http://localhost:3000",
+        // target: "https://orderly-backend-hy15.onrender.com",
+        target: "http://localhost:3000",
         changeOrigin: true,
         secure: true,
       },

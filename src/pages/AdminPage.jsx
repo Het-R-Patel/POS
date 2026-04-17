@@ -98,7 +98,7 @@ const AdminPage = () => {
     { id: 'menu', label: 'Menu Management', icon: UtensilsCrossed },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    // { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -107,7 +107,7 @@ const AdminPage = () => {
       <aside className="hidden lg:block w-64 bg-white shadow-lg flex-shrink-0 relative">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-3xl font-display font-bold text-gray-900 tracking-tight">
-            Orderly
+            Restro POS
           </h1>
         </div>
 

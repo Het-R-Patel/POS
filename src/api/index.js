@@ -5,5 +5,6 @@ export * from './tablesApi';
 export * from './ordersApi';
 export * from './notificationsApi';
 export * from './authApi';
+export * from './aiApi';
 export { default as axiosInstance } from './config';
 export { API_BASE_URL } from './config';

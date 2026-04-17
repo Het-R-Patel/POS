@@ -52,7 +52,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-1.5 md:space-x-2">
             <ChefHat className="h-6 w-6 md:h-8 md:w-8 text-primary-500" />
             <span className="text-lg md:text-xl font-display font-bold text-secondary-800">
-              Orderly
+              Restro POS
             </span>
           </div>
 
@@ -79,12 +79,12 @@ const Navigation = () => {
             })}
 
             {/* Notification Bell */}
-            <NotificationBell
+            {/* <NotificationBell
               notifications={notifications}
               onRemove={removeNotification}
               onMarkAsRead={markAsRead}
               onClearAll={clearAll}
-            />
+            /> */}
 
             {/* Logout Button */}
             <button

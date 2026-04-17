@@ -51,7 +51,7 @@ const LoginPage = () => {
               </div>
               <div className="ml-3">
                 <h1 className="text-2xl font-display font-bold text-gray-900">
-                  Orderly
+                  Restro POS
                 </h1>
                 <p className="text-sm text-gray-600">Point of Sale System</p>
               </div>

@@ -20,3 +20,20 @@ export const fetchMenuItems = async (params) => {
     );
   }
 };
+
+/**
+ * Fetch a single menu item by ID from the backend
+ * @param {string} id - The ID of the menu item
+ * @returns {Promise} Promise resolving to the menu item data
+ * @throws {Error} Throws error if API call fails
+ */
+export const fetchMenuItemById = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/menu-items/${id}`);
+    return response.data?.data || response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch menu item details",
+    );
+  }
+};
